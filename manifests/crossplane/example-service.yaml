@@ -1,0 +1,24 @@
+
+apiVersion: platform.example.com/v1alpha1
+kind: WebService
+metadata:
+  name: nginx-demo
+  namespace: default
+spec:
+  replicas: 3
+  image: nginx:latest
+  port: 80
+  path: /
+  host: demo.yourdomain.com  # Change to your domain
+---
+apiVersion: platform.example.com/v1alpha1
+kind: WebService
+metadata:
+  name: hello-world
+  namespace: default
+spec:
+  replicas: 2
+  image: gcr.io/google-samples/hello-app:1.0
+  port: 8080
+  path: /hello
+  host: hello.yourdomain.com  # Change to your domain

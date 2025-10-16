@@ -1,0 +1,35 @@
+
+#cloud-config
+version: v1alpha1
+debug: false
+persist: true
+machine:
+  type: worker
+  token: ${cluster_name}-token
+  ca:
+    crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEVBK2o4K0N4OXdVaGtmZHIrY3hUQUtCZ2dxaGtqT1BRUURBakFSTVE4d0RRWUQKVlFRREV3WjBZV3h2Y3pBZUZ3MHlOREF4TURFeE5qVTRNREJhRncweU5UQXhNREV4TmpVNE1EQmFNQkV4RHpBTgpCZ05WQkFNVEJuUmhiRzl6TUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFV0o4SFZDUTdnV3VOClkxM1o4VitQTUh0VVBPL0FpUitGL1lLOFZKcGpIWGRYaVh2Wk9IQzV4UFlhL3F3WlhLeEFRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    key: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUo5SDFmK1FhZzBLSTBJOXBmRHBYWWE5TVlrb0FnRUdDQ3FHU000OUF3RUhvVVFEUWdBRVdKOEgKVkNRN2dXdU5ZMTNaOFYrUE1IdFVQTy9BaVIrRi9ZSzhWSnBqSFhkWGlYdlpPSEM1eFBZYS9xd1pYS3hBUT09Ci0tLS0tRU5EIEVDIFBSSVZBVEUgS0VZLS0tLS0K
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.28.0
+    defaultRuntimeSeccompProfileEnabled: true
+    disableManifestsDirectory: true
+  network:
+    hostname: ${cluster_name}-worker
+    interfaces:
+      - interface: eth0
+        dhcp: true
+      - interface: eth1
+        dhcp: false
+        addresses:
+          - ${node_ip}/24
+  install:
+    disk: /dev/sda
+    image: ghcr.io/siderolabs/installer:v1.6.0
+    bootloader: true
+    wipe: false
+cluster:
+  id: ${cluster_name}
+  secret: ${cluster_name}-secret
+  controlPlane:
+    endpoint: https://${control_plane_ip}:6443
+  clusterName: ${cluster_name}

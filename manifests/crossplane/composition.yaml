@@ -1,0 +1,132 @@
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: webservices.platform.example.com
+spec:
+  group: platform.example.com
+  names:
+    kind: WebService
+    plural: webservices
+  claimNames:
+    kind: WebServiceClaim
+    plural: webserviceclaims
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              replicas:
+                type: integer
+                default: 2
+              image:
+                type: string
+              port:
+                type: integer
+                default: 80
+              path:
+                type: string
+                default: "/"
+              host:
+                type: string
+            required:
+            - image
+            - host
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: webservice-composition
+spec:
+  compositeTypeRef:
+    apiVersion: platform.example.com/v1alpha1
+    kind: WebService
+  resources:
+  - name: deployment
+    base:
+      apiVersion: apps/v1
+      kind: Deployment
+      spec:
+        selector:
+          matchLabels:
+            app: web-service
+        template:
+          metadata:
+            labels:
+              app: web-service
+          spec:
+            containers:
+            - name: app
+              ports:
+              - containerPort: 80
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.replicas
+      toFieldPath: spec.replicas
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.image
+      toFieldPath: spec.template.spec.containers[0].image
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.port
+      toFieldPath: spec.template.spec.containers[0].ports[0].containerPort
+  - name: service
+    base:
+      apiVersion: v1
+      kind: Service
+      spec:
+        type: ClusterIP
+        ports:
+        - port: 80
+          targetPort: 80
+        selector:
+          app: web-service
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.port
+      toFieldPath: spec.ports[0].port
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.port
+      toFieldPath: spec.ports[0].targetPort
+  - name: ingress
+    base:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      spec:
+        ingressClassName: traefik
+        tls:
+        - hosts:
+          - example.com
+          secretName: web-service-tls
+        rules:
+        - http:
+            paths:
+            - pathType: Prefix
+              path: /
+              backend:
+                service:
+                  name: web-service
+                  port:
+                    number: 80
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.host
+      toFieldPath: spec.tls[0].hosts[0]
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.host
+      toFieldPath: spec.rules[0].host
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.path
+      toFieldPath: spec.rules[0].http.paths[0].path
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.port
+      toFieldPath: spec.rules[0].http.paths[0].backend.service.port.number
