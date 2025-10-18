@@ -59,8 +59,8 @@ variable "letsencrypt_email" {
   default     = "admin@example.com"
 }
 
-variable "talos_image_id" {
-  description = "Hetzner Talos OS snapshot ID"
+variable "base_image" {
+  description = "Base OS image for cloud-init Talos installation"
   type        = string
-  default     = "168059"  # Talos v1.6.0 for Hetzner Cloud (amd64)
+  default     = "ubuntu-22.04"
 }

@@ -107,9 +107,15 @@ resource "null_resource" "talos_config" {
 resource "hcloud_server" "control_plane" {
   name        = "${var.cluster_name}-control-1"
   server_type = var.server_type
-  image       = hcloud_snapshot.talos.id
+  image       = var.base_image
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
+
+  user_data = <<-EOT
+    #cloud-config
+    runcmd:
+      - curl -sL https://factory.talos.dev/image/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba/v1.11.3/hcloud-amd64.raw.xz | xz -d | dd of=/dev/sda && reboot
+  EOT
 
   public_net {
     ipv4_enabled = true
@@ -122,8 +128,7 @@ resource "hcloud_server" "control_plane" {
   }
 
   depends_on = [
-    hcloud_network_subnet.private_subnet,
-    hcloud_snapshot.talos
+    hcloud_network_subnet.private_subnet
   ]
 
   labels = {
@@ -137,9 +142,15 @@ resource "hcloud_server" "workers" {
   count       = var.worker_count
   name        = "${var.cluster_name}-worker-${count.index + 1}"
   server_type = var.server_type
-  image       = hcloud_snapshot.talos.id
+  image       = var.base_image
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
+
+  user_data = <<-EOT
+    #cloud-config
+    runcmd:
+      - curl -sL https://factory.talos.dev/image/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba/v1.11.3/hcloud-amd64.raw.xz | xz -d | dd of=/dev/sda && reboot
+  EOT
 
   public_net {
     ipv4_enabled = true
@@ -152,8 +163,7 @@ resource "hcloud_server" "workers" {
   }
 
   depends_on = [
-    hcloud_network_subnet.private_subnet,
-    hcloud_snapshot.talos
+    hcloud_network_subnet.private_subnet
   ]
 
   labels = {
