@@ -57,7 +57,7 @@ Before starting, ensure you have the following tools installed:
 export TF_VAR_hcloud_token="your-hetzner-api-token-here"
 ```
 
-### Step 2: Deploy Everything with One Command
+### Step 2: Deploy Infrastructure
 
 ```bash
 cd terraform
@@ -65,7 +65,7 @@ terraform init
 terraform apply
 ```
 
-### What Happens During Deployment (Fully Automated)
+### What Happens During Deployment
 
 1. **Infrastructure Provisioning** (~2 minutes)
    - Creates Hetzner Cloud servers
@@ -108,22 +108,22 @@ talos-worker-2      Ready    <none>          4m    v1.28.0
 
 ## Automation & Reproducibility
 
-This deployment is **100% automated** and **fully reproducible**. No manual steps or separate scripts required.
+This deployment is **fully automated** via Terraform with cloud-init.
 
 ### Key Features
 
-✅ **Single Command Deployment**: `terraform apply` does everything
+✅ **Single Command Deployment**: `terraform apply` provisions everything
 ✅ **Cloud-Init Integration**: Talos OS installed automatically on boot
-✅ **Idempotent**: Running `terraform apply` multiple times is safe
-✅ **Clean Destruction**: `terraform destroy` removes everything cleanly
+✅ **Idempotent**: Safe to run multiple times
+✅ **Clean Destruction**: `terraform destroy` removes all resources
 
 ### How It Works
 
-1. Terraform creates servers with Ubuntu 22.04 image
-2. Cloud-init script downloads and installs Talos OS to disk
-3. Server reboots into Talos OS
-4. Terraform provisioners wait for Talos API, then bootstrap cluster
-5. kubeconfig automatically retrieved and saved
+1. Terraform creates Hetzner Cloud servers
+2. Cloud-init downloads and installs Talos OS to disk
+3. Servers reboot into Talos OS
+4. Terraform waits for Talos API, then bootstraps cluster
+5. Kubeconfig automatically retrieved and saved
 
 ## Developer Self-Service with Crossplane
 
