@@ -32,9 +32,9 @@ if ! command -v kubectl &> /dev/null; then
     exit 1
 fi
 
-if [ -z "$HCLOUD_TOKEN" ]; then
-    echo -e "${RED}Error: HCLOUD_TOKEN environment variable is not set${NC}"
-    echo "Please run: export HCLOUD_TOKEN='your-token-here'"
+if [ -z "$TF_VAR_hcloud_token" ]; then
+    echo -e "${RED}Error: TF_VAR_hcloud_token environment variable is not set${NC}"
+    echo "Please run: export TF_VAR_hcloud_token='your-token-here'"
     exit 1
 fi
 
@@ -50,7 +50,7 @@ terraform init
 
 # Plan deployment
 echo -e "${YELLOW}Planning deployment...${NC}"
-terraform plan -var="hcloud_token=$HCLOUD_TOKEN"
+terraform plan
 
 # Confirm deployment
 echo ""
@@ -62,7 +62,7 @@ fi
 
 # Apply Terraform
 echo -e "${YELLOW}Deploying infrastructure...${NC}"
-terraform apply -auto-approve -var="hcloud_token=$HCLOUD_TOKEN"
+terraform apply -auto-approve
 
 # Export kubeconfig
 export KUBECONFIG=$(pwd)/../kubeconfig

@@ -30,3 +30,29 @@ Thumbs.db
 *.pem
 *.key
 !*.pub
+# Terraform state
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# Talos generated configs
+talos/talosconfig
+talos/controlplane.yaml
+talos/worker.yaml
+talos/secrets.yaml
+
+# Kubeconfig
+kubeconfig
+
+# Environment variables
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -189,9 +189,9 @@ resource "null_resource" "talos_config" {
 
   provisioner "local-exec" {
     command = <<-EOT
+      mkdir -p ${path.module}/../talos
       talosctl gen config ${var.cluster_name} https://${hcloud_server.control_plane.ipv4_address}:6443 \
         --output-dir ${path.module}/../talos \
-        --with-secrets ${path.module}/../talos/secrets.yaml \
         --kubernetes-version=${var.kubernetes_version}
     EOT
   }
