@@ -1,0 +1,52 @@
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # null_resource.talos_bootstrap will be created
+  + resource "null_resource" "talos_bootstrap" {
+      + id       = (known after apply)
+      + triggers = {
+          + "control_plane_id" = "111035240"
+          + "worker_ids"       = "111035239,111035238"
+        }
+    }
+
+  # null_resource.talos_config is tainted, so must be replaced
+-/+ resource "null_resource" "talos_config" {
+      ~ id       = "3401451208524143838" -> (known after apply)
+        # (1 unchanged attribute hidden)
+    }
+
+Plan: 2 to add, 0 to change, 1 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.talos_config: Destroying... [id=3401451208524143838]
+null_resource.talos_config: Destruction complete after 0s
+null_resource.talos_config: Creating...
+null_resource.talos_config: Provisioning with 'local-exec'...
+null_resource.talos_config (local-exec): Executing: ["/bin/sh" "-c" "mkdir -p ./../talos\ntalosctl gen config talos-k8s https://167.235.238.81:6443 \\\n  --output-dir ./../talos \\\n  --kubernetes-version=v1.28.0\n"]
+null_resource.talos_config (local-exec): generating PKI and tokens
+null_resource.talos_config (local-exec): file "../talos/controlplane.yaml" already exists, use --force to overwrite
+╷
+│ Error: local-exec provisioner error
+│ 
+│   with null_resource.talos_config,
+│   on main.tf line 94, in resource "null_resource" "talos_config":
+│   94:   provisioner "local-exec" {
+│ 
+│ Error running command 'mkdir -p ./../talos
+│ talosctl gen config talos-k8s https://167.235.238.81:6443 \
+│   --output-dir ./../talos \
+│   --kubernetes-version=v1.28.0
+│ ': exit status 1. Output: generating PKI and tokens
+│ file "../talos/controlplane.yaml" already exists, use --force to overwrite
+│ 
+╵
+[ec2-user@ip-10-0-3-211 terraform]$ 

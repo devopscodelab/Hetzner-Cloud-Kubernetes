@@ -1,0 +1,45 @@
+ull_resource.talos_bootstrap: Still creating... [06m40s elapsed]
+null_resource.talos_bootstrap: Still creating... [06m50s elapsed]
+null_resource.talos_bootstrap: Still creating... [07m00s elapsed]
+null_resource.talos_bootstrap (local-exec): Waiting for Talos API to be ready...
+null_resource.talos_bootstrap (local-exec): Client:
+null_resource.talos_bootstrap (local-exec):     Tag:         v1.11.3
+null_resource.talos_bootstrap (local-exec):     SHA:         a0243ef7
+null_resource.talos_bootstrap (local-exec):     Built:
+null_resource.talos_bootstrap (local-exec):     Go version:  go1.24.9
+null_resource.talos_bootstrap (local-exec):     OS/Arch:     linux/amd64
+null_resource.talos_bootstrap (local-exec): Server:
+null_resource.talos_bootstrap: Still creating... [07m10s elapsed]
+null_resource.talos_bootstrap: Still creating... [07m20s elapsed]
+null_resource.talos_bootstrap (local-exec): Attempt 1/60: Talos API not ready yet, waiting 10 seconds...
+null_resource.talos_bootstrap: Still creating... [07m30s elapsed]
+null_resource.talos_bootstrap (local-exec): Client:
+null_resource.talos_bootstrap (local-exec):     Tag:         v1.11.3
+null_resource.talos_bootstrap (local-exec):     SHA:         a0243ef7
+null_resource.talos_bootstrap (local-exec):     Built:
+null_resource.talos_bootstrap (local-exec):     Go version:  go1.24.9
+null_resource.talos_bootstrap (local-exec):     OS/Arch:     linux/amd64
+null_resource.talos_bootstrap (local-exec): Server:
+null_resource.talos_bootstrap: Still creating... [07m40s elapsed]
+null_resource.talos_bootstrap: Still creating... [07m50s elapsed]
+null_resource.talos_bootstrap (local-exec): Attempt 2/60: Talos API not ready yet, waiting 10 seconds...
+null_resource.talos_bootstrap: Still creating... [08m00s elapsed]
+null_resource.talos_bootstrap (local-exec): Client:
+null_resource.talos_bootstrap (local-exec):     Tag:         v1.11.3
+null_resource.talos_bootstrap (local-exec):     SHA:         a0243ef7
+null_resource.talos_bootstrap (local-exec):     Built:
+null_resource.talos_bootstrap (local-exec):     Go version:  go1.24.9
+null_resource.talos_bootstrap (local-exec):     OS/Arch:     linux/amd64
+null_resource.talos_bootstrap (local-exec): Server:
+null_resource.talos_bootstrap: Still creating... [08m10s elapsed]
+null_resource.talos_bootstrap: Still creating... [08m20s elapsed]
+null_resource.talos_bootstrap (local-exec): Attempt 3/60: Talos API not ready yet, waiting 10 seconds...
+null_resource.talos_bootstrap: Still creating... [08m30s elapsed]
+null_resource.talos_bootstrap (local-exec): Client:
+null_resource.talos_bootstrap (local-exec):     Tag:         v1.11.3
+null_resource.talos_bootstrap (local-exec):     SHA:         a0243ef7
+null_resource.talos_bootstrap (local-exec):     Built:
+null_resource.talos_bootstrap (local-exec):     Go version:  go1.24.9
+null_resource.talos_bootstrap (local-exec):     OS/Arch:     linux/amd64
+null_resource.talos_bootstrap (local-exec): Server:
+null_resource.talos_bootstrap: Still creating... [08m40s elapsed]
