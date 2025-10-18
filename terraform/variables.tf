@@ -47,12 +47,6 @@ variable "network_zone" {
   default     = "eu-central"
 }
 
-variable "ssh_public_key" {
-  description = "SSH public key for emergency access"
-  type        = string
-  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC... your-key-here"
-}
-
 variable "kubernetes_version" {
   description = "Kubernetes version to install"
   type        = string
