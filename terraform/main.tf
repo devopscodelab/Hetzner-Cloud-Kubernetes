@@ -1,4 +1,3 @@
-
 provider "hcloud" {
   token = var.hcloud_token
 }
@@ -108,7 +107,7 @@ resource "null_resource" "talos_config" {
 resource "hcloud_server" "control_plane" {
   name        = "${var.cluster_name}-control-1"
   server_type = var.server_type
-  image       = var.talos_image_id
+  image       = hcloud_snapshot.talos.id
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
 
@@ -122,7 +121,10 @@ resource "hcloud_server" "control_plane" {
     ip         = "10.0.1.10"
   }
 
-  depends_on = [hcloud_network_subnet.private_subnet]
+  depends_on = [
+    hcloud_network_subnet.private_subnet,
+    hcloud_snapshot.talos
+  ]
 
   labels = {
     role    = "control-plane"
@@ -135,7 +137,7 @@ resource "hcloud_server" "workers" {
   count       = var.worker_count
   name        = "${var.cluster_name}-worker-${count.index + 1}"
   server_type = var.server_type
-  image       = var.talos_image_id
+  image       = hcloud_snapshot.talos.id
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
 
@@ -149,7 +151,10 @@ resource "hcloud_server" "workers" {
     ip         = "10.0.1.${20 + count.index}"
   }
 
-  depends_on = [hcloud_network_subnet.private_subnet]
+  depends_on = [
+    hcloud_network_subnet.private_subnet,
+    hcloud_snapshot.talos
+  ]
 
   labels = {
     role    = "worker"
@@ -193,6 +198,7 @@ resource "hcloud_load_balancer_service" "k8s_api_service" {
 # Bootstrap Talos cluster
 resource "null_resource" "talos_bootstrap" {
   triggers = {
+    cluster_name = var.cluster_name
     control_plane_id = hcloud_server.control_plane.id
     worker_ids       = join(",", hcloud_server.workers[*].id)
   }
