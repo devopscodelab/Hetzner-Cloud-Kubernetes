@@ -17,14 +17,12 @@ This project provides a fully automated Terraform setup to deploy a production-r
 
 ## Prerequisites
 
-Before starting, ensure you have the following tools installed on your local machine:
+Before starting, ensure you have the following tools installed:
 
 1. **Terraform** (>= 1.0)
    ```bash
-   # Install Terraform
-   wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-   unzip terraform_1.6.0_linux_amd64.zip
-   sudo mv terraform /usr/local/bin/
+   # Already installed in Replit environment
+   terraform version
    ```
 
 2. **talosctl** (Talos CLI)
@@ -35,15 +33,13 @@ Before starting, ensure you have the following tools installed on your local mac
 3. **kubectl** (Kubernetes CLI)
    ```bash
    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-   sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+   chmod +x kubectl
+   sudo mv kubectl /usr/local/bin/
    ```
 
 4. **Hetzner Cloud API Token**
    - Create an API token in your Hetzner Cloud Console: https://console.hetzner.cloud/
-   - Export it as an environment variable:
-   ```bash
-   export HCLOUD_TOKEN="your-api-token-here"
-   ```
+   - Set it as an environment variable (see Deployment Steps)
 
 ## Project Structure
 
@@ -55,12 +51,13 @@ Before starting, ensure you have the following tools installed on your local mac
 │   ├── outputs.tf          # Output values
 │   └── versions.tf         # Provider versions
 ├── talos/
-│   ├── controlplane.yaml   # Generated control plane config
-│   └── worker.yaml         # Generated worker config
+│   ├── controlplane-userdata.yaml   # Control plane config template
+│   └── worker-userdata.yaml         # Worker config template
 ├── manifests/
 │   ├── crossplane/
 │   │   ├── install.yaml
-│   │   └── composition.yaml
+│   │   ├── composition.yaml
+│   │   └── example-service.yaml
 │   ├── traefik/
 │   │   └── values.yaml
 │   └── cert-manager/
@@ -75,55 +72,49 @@ Before starting, ensure you have the following tools installed on your local mac
 ### Step 1: Set Environment Variables
 
 ```bash
-export HCLOUD_TOKEN="your-hetzner-api-token"
-export CLUSTER_NAME="talos-k8s"
-export EMAIL="your-email@example.com"  # For Let's Encrypt certificates
-export TF_VAR_hcloud_token="LTV8RwD6BUAMLOuZGPuUxGxnNQPRSuhQXcoCAn6us9EA1qCQpG9F3US0wlYCo25G"
+export TF_VAR_hcloud_token="your-hetzner-api-token-here"
 ```
 
-### Step 2: One-Command Deployment
+**Note**: TalosOS doesn't use SSH - the cluster is managed entirely through the Talos API, making it more secure than traditional setups.
 
-Run the automated deployment script:
-
-```bash
-./scripts/deploy.sh
-```
-
-**OR** manually execute:
+### Step 2: Initialize and Deploy
 
 ```bash
 cd terraform
 terraform init
-terraform apply -auto-approve
+terraform plan
+terraform apply
 ```
 
 ### Step 3: What Happens During Deployment
 
 1. **Infrastructure Provisioning** (5-10 minutes)
    - Creates Hetzner Cloud servers (1 control plane, 2 workers)
-   - Sets up private networking
-   - Configures firewall rules
+   - Sets up private networking (10.0.0.0/24)
+   - Configures firewall rules (only ports 6443, 443, 50000 exposed)
 
-2. **Talos Bootstrap** (3-5 minutes)
+2. **Talos Bootstrap** (automatic via cloud-init)
    - Generates Talos machine configurations
    - Bootstraps the control plane
    - Joins worker nodes to the cluster
 
-3. **Kubernetes Stack Installation** (5-10 minutes)
-   - Installs Crossplane
-   - Deploys Traefik ingress controller
-   - Configures Cert-Manager with Let's Encrypt
+3. **Kubernetes Stack** (ready after bootstrap)
+   - Kubernetes v1.28.0 installed
+   - Ready for Crossplane, Traefik, and Cert-Manager deployment
 
 ### Step 4: Access Your Cluster
 
-After deployment completes, retrieve the kubeconfig:
+After deployment completes, the outputs will show:
 
 ```bash
-export KUBECONFIG=$(pwd)/kubeconfig
+# Set kubeconfig path
+export KUBECONFIG=./../kubeconfig
+
+# Verify cluster
 kubectl get nodes
 ```
 
-You should see output similar to:
+Expected output:
 ```
 NAME                STATUS   ROLES           AGE   VERSION
 talos-control-1     Ready    control-plane   5m    v1.28.0
@@ -166,12 +157,23 @@ This will automatically:
 
 ## Security Features
 
-✅ **SSH Disabled**: TalosOS has no SSH access by design
+✅ **No SSH Access**: TalosOS has no SSH by design - all management via secure API
 ✅ **Immutable OS**: TalosOS is read-only and declaratively configured
-✅ **Secrets Management**: All sensitive data via environment variables
+✅ **Minimal Attack Surface**: No package manager, no shell access
+✅ **Secrets Management**: Token via environment variable only
 ✅ **Network Segmentation**: Private network for inter-node communication
 ✅ **RBAC**: Kubernetes role-based access control enabled
 ✅ **Encrypted API**: Talos API uses mutual TLS
+✅ **Firewall**: Only essential ports exposed (6443, 443, 50000)
+
+## Firewall Configuration
+
+The following ports are exposed:
+
+- **6443**: Kubernetes API (from anywhere)
+- **443**: HTTPS ingress (from anywhere)
+- **50000**: Talos API (from anywhere)
+- **ICMP**: Internal network only (10.0.0.0/16)
 
 ## Customization
 
@@ -204,6 +206,14 @@ variable "worker_count" {
 
 ## Troubleshooting
 
+### Issue: Terraform plan fails with token error
+
+Ensure your token is exactly 64 characters and set correctly:
+```bash
+export TF_VAR_hcloud_token="your-64-character-token"
+echo ${#TF_VAR_hcloud_token}  # Should output: 64
+```
+
 ### Issue: Talos bootstrap fails
 
 ```bash
@@ -224,7 +234,7 @@ talosctl -n <node-ip> get members
 ```bash
 # Check Traefik status
 kubectl get pods -n traefik
-kubectl logs -n traefik -l app.kubernetes.io/name=traefik
+kubectl logs -n traefik -l app=traefik
 ```
 
 ### Issue: Certificates not issuing
@@ -241,7 +251,7 @@ To destroy all resources:
 
 ```bash
 cd terraform
-terraform destroy -auto-approve
+terraform destroy
 ```
 
 ⚠️ **Warning**: This will permanently delete all infrastructure and data.
@@ -256,16 +266,25 @@ terraform destroy -auto-approve
 ## Next Steps
 
 1. Configure your domain DNS to point to the Traefik LoadBalancer IP
-2. Update the Crossplane composition with your domain
-3. Deploy your applications using the WebService CRD
-4. Set up monitoring with Prometheus/Grafana
-5. Configure backup solutions for etcd
+2. Update `manifests/cert-manager/cluster-issuer.yaml` with your email
+3. Deploy Crossplane: `kubectl apply -f manifests/crossplane/install.yaml`
+4. Deploy Traefik: `kubectl apply -f manifests/traefik/values.yaml`
+5. Deploy Cert-Manager and apply cluster issuer
+6. Deploy your applications using the WebService CRD
+
+## Key Differences from Traditional K8s Setup
+
+1. **No SSH Required**: TalosOS manages everything through its API
+2. **Immutable Infrastructure**: OS cannot be modified at runtime
+3. **Declarative Configuration**: All changes via machine configs
+4. **Minimal Dependencies**: Only Hetzner Cloud token needed
+5. **Enhanced Security**: Reduced attack surface with no shell access
 
 ## Support & Contributing
 
-- **Issues**: Report issues in the project repository
-- **Documentation**: https://www.talos.dev/
-- **Hetzner Cloud**: https://docs.hetzner.com/cloud/
+- **Talos Documentation**: https://www.talos.dev/
+- **Hetzner Cloud Docs**: https://docs.hetzner.com/cloud/
+- **Crossplane Docs**: https://crossplane.io/docs/
 
 ## License
 
