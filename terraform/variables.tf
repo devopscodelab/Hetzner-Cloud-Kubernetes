@@ -8,7 +8,7 @@ variable "hcloud_token" {
 variable "cluster_name" {
   description = "Name of the Kubernetes cluster"
   type        = string
-  default     = "talos-k8s"
+  default     = "talos-k8s-v2"
 }
 
 variable "server_type" {
