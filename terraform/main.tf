@@ -108,20 +108,9 @@ resource "null_resource" "talos_config" {
 resource "hcloud_server" "control_plane" {
   name        = "${var.cluster_name}-control-1"
   server_type = var.server_type
-  image       = "ubuntu-22.04"
+  image       = var.talos_image_id
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
-
-  user_data = <<-EOT
-    #cloud-config
-    runcmd:
-      - |
-        # Download and install Talos
-        curl -Lo /tmp/talos.raw.xz https://github.com/siderolabs/talos/releases/download/v1.6.0/hcloud-amd64.raw.xz
-        xz -d /tmp/talos.raw.xz
-        dd if=/tmp/talos.raw of=/dev/sda bs=4M && sync
-        reboot
-  EOT
 
   public_net {
     ipv4_enabled = true
@@ -146,20 +135,9 @@ resource "hcloud_server" "workers" {
   count       = var.worker_count
   name        = "${var.cluster_name}-worker-${count.index + 1}"
   server_type = var.server_type
-  image       = "ubuntu-22.04"
+  image       = var.talos_image_id
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
-
-  user_data = <<-EOT
-    #cloud-config
-    runcmd:
-      - |
-        # Download and install Talos
-        curl -Lo /tmp/talos.raw.xz https://github.com/siderolabs/talos/releases/download/v1.6.0/hcloud-amd64.raw.xz
-        xz -d /tmp/talos.raw.xz
-        dd if=/tmp/talos.raw of=/dev/sda bs=4M && sync
-        reboot
-  EOT
 
   public_net {
     ipv4_enabled = true
@@ -221,9 +199,9 @@ resource "null_resource" "talos_bootstrap" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      # Wait for Talos OS to boot (7 minutes for download + install + reboot)
-      echo "Waiting for Talos OS installation and boot..."
-      sleep 420
+      # Wait for Talos OS to boot (much faster with pre-installed image)
+      echo "Waiting for Talos OS to boot..."
+      sleep 60
 
       # Configure talosctl
       export TALOSCONFIG=./../talos/talosconfig
@@ -232,12 +210,12 @@ resource "null_resource" "talos_bootstrap" {
 
       # Wait for Talos API to be available
       echo "Waiting for Talos API to be ready..."
-      for i in {1..60}; do
+      for i in {1..30}; do
         if talosctl version --nodes ${hcloud_server.control_plane.ipv4_address} 2>/dev/null; then
           echo "Talos API is ready!"
           break
         fi
-        echo "Attempt $i/60: Talos API not ready yet, waiting 10 seconds..."
+        echo "Attempt $i/30: Talos API not ready yet, waiting 10 seconds..."
         sleep 10
       done
 
