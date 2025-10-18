@@ -1,2 +1,5 @@
 [agent]
 expertMode = true
+
+[nix]
+packages = ["wget", "unzipNLS", "terraform_0_14", "openssh"]
