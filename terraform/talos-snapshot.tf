@@ -10,8 +10,8 @@ resource "hcloud_server" "talos_snapshot_builder" {
     #!/bin/bash
     set -e
     
-    # Talos image'ı indir
-    curl -LO https://github.com/siderolabs/talos/releases/download/v1.8.3/hcloud-amd64.raw.xz
+    # Talos Image Factory'den Hetzner-optimized image indir
+    curl -LO https://factory.talos.dev/image/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba/v1.11.3/hcloud-amd64.raw.xz
     xz -d hcloud-amd64.raw.xz
     
     # Disk'e yaz
@@ -42,10 +42,12 @@ resource "null_resource" "wait_for_snapshot_ready" {
 # Snapshot oluştur
 resource "hcloud_snapshot" "talos" {
   server_id   = hcloud_server.talos_snapshot_builder.id
-  description = "Talos OS v1.8.3 for x86"
+  description = "Talos OS v1.11.3 (Image Factory) for Hetzner Cloud"
   labels = {
-    os      = "talos"
-    version = "1.8.3"
+    os          = "talos"
+    version     = "1.11.3"
+    source      = "image-factory"
+    schematic   = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
   }
 
   depends_on = [null_resource.wait_for_snapshot_ready]

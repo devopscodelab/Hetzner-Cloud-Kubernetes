@@ -50,7 +50,7 @@ variable "network_zone" {
 variable "kubernetes_version" {
   description = "Kubernetes version to install"
   type        = string
-  default     = "v1.28.0"
+  default     = "v1.32.1"
 }
 
 variable "letsencrypt_email" {
