@@ -6,11 +6,11 @@ output "control_plane_ip" {
 
 output "worker_ips" {
   description = "Public IPs of worker nodes"
-  value       = [for worker in hcloud_server.workers : worker.ipv4_address]
+  value       = hcloud_server.workers[*].ipv4_address
 }
 
 output "load_balancer_ip" {
-  description = "IP of the Kubernetes API load balancer"
+  description = "Public IP of the Kubernetes API load balancer"
   value       = hcloud_load_balancer.k8s_api.ipv4
 }
 
@@ -24,32 +24,26 @@ output "talosconfig_path" {
   value       = "${path.module}/../talos/talosconfig"
 }
 
-output "cluster_endpoint" {
-  description = "Kubernetes cluster endpoint"
-  value       = "https://${hcloud_server.control_plane.ipv4_address}:6443"
-}
-
 output "next_steps" {
   description = "Next steps after deployment"
   value       = <<-EOT
-    
-    ✅ Cluster deployed successfully!
-    
-    Next steps:
-    
-    1. Set your kubeconfig:
+    Deployment complete! Next steps:
+
+    1. Set kubeconfig:
        export KUBECONFIG=${path.module}/../kubeconfig
-    
+
     2. Verify cluster:
        kubectl get nodes
-    
-    3. Check installed components:
+
+    3. Check cluster status:
        kubectl get pods -A
-    
-    4. Configure DNS for your domain to point to Traefik LoadBalancer IP
-    
-    5. Deploy a sample service:
-       kubectl apply -f manifests/crossplane/example-service.yaml
-    
+
+    4. Deploy applications:
+       - Crossplane: kubectl apply -f manifests/crossplane/install.yaml
+       - Traefik: (Helm chart needed)
+       - Cert-Manager: (Helm chart needed)
+
+    Control Plane IP: ${hcloud_server.control_plane.ipv4_address}
+    Worker IPs: ${join(", ", hcloud_server.workers[*].ipv4_address)}
   EOT
 }

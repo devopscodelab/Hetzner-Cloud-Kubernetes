@@ -1,3 +1,4 @@
+
 provider "hcloud" {
   token = var.hcloud_token
 }
@@ -84,18 +85,42 @@ resource "hcloud_firewall" "cluster_firewall" {
   }
 }
 
+# Generate Talos configurations locally
+resource "null_resource" "talos_config" {
+  triggers = {
+    cluster_name = var.cluster_name
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      mkdir -p ./../talos
+      talosctl gen config ${var.cluster_name} https://${hcloud_server.control_plane.ipv4_address}:6443 \
+        --output-dir ./../talos \
+        --kubernetes-version=${var.kubernetes_version}
+    EOT
+  }
+
+  depends_on = [hcloud_server.control_plane]
+}
+
 # Control Plane Node
 resource "hcloud_server" "control_plane" {
   name        = "${var.cluster_name}-control-1"
   server_type = var.server_type
-  image       = "ubuntu-22.04"  # Will be replaced by Talos
+  image       = "ubuntu-22.04"
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
 
-  user_data = templatefile("${path.module}/../talos/controlplane-userdata.yaml", {
-    cluster_name = var.cluster_name
-    node_ip      = "10.0.1.10"
-  })
+  user_data = <<-EOT
+    #cloud-config
+    runcmd:
+      - |
+        # Download and install Talos
+        curl -Lo /tmp/talos.raw.xz https://github.com/siderolabs/talos/releases/download/v1.6.0/hcloud-amd64.raw.xz
+        xz -d /tmp/talos.raw.xz
+        dd if=/tmp/talos.raw of=/dev/sda bs=4M && sync
+        reboot
+  EOT
 
   public_net {
     ipv4_enabled = true
@@ -120,15 +145,20 @@ resource "hcloud_server" "workers" {
   count       = var.worker_count
   name        = "${var.cluster_name}-worker-${count.index + 1}"
   server_type = var.server_type
-  image       = "ubuntu-22.04"  # Will be replaced by Talos
+  image       = "ubuntu-22.04"
   location    = var.location
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
 
-  user_data = templatefile("${path.module}/../talos/worker-userdata.yaml", {
-    cluster_name     = var.cluster_name
-    node_ip          = "10.0.1.${20 + count.index}"
-    control_plane_ip = hcloud_server.control_plane.ipv4_address
-  })
+  user_data = <<-EOT
+    #cloud-config
+    runcmd:
+      - |
+        # Download and install Talos
+        curl -Lo /tmp/talos.raw.xz https://github.com/siderolabs/talos/releases/download/v1.6.0/hcloud-amd64.raw.xz
+        xz -d /tmp/talos.raw.xz
+        dd if=/tmp/talos.raw of=/dev/sda bs=4M && sync
+        reboot
+  EOT
 
   public_net {
     ipv4_enabled = true
@@ -181,5 +211,72 @@ resource "hcloud_load_balancer_service" "k8s_api_service" {
   destination_port = 6443
 }
 
-# Note: Talos bootstrap is done manually after infrastructure is created
-# See scripts/bootstrap-talos.sh for the bootstrap process
+# Bootstrap Talos cluster
+resource "null_resource" "talos_bootstrap" {
+  triggers = {
+    control_plane_id = hcloud_server.control_plane.id
+    worker_ids       = join(",", hcloud_server.workers[*].id)
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Wait for Talos OS to boot (7 minutes for download + install + reboot)
+      echo "Waiting for Talos OS installation and boot..."
+      sleep 420
+
+      # Configure talosctl
+      export TALOSCONFIG=./../talos/talosconfig
+      talosctl config endpoint ${hcloud_server.control_plane.ipv4_address}
+      talosctl config node ${hcloud_server.control_plane.ipv4_address}
+
+      # Wait for Talos API to be available
+      echo "Waiting for Talos API to be ready..."
+      for i in {1..60}; do
+        if talosctl version --nodes ${hcloud_server.control_plane.ipv4_address} 2>/dev/null; then
+          echo "Talos API is ready!"
+          break
+        fi
+        echo "Attempt $i/60: Talos API not ready yet, waiting 10 seconds..."
+        sleep 10
+      done
+
+      # Apply control plane config
+      echo "Applying control plane configuration..."
+      talosctl apply-config --insecure \
+        --nodes ${hcloud_server.control_plane.ipv4_address} \
+        --file ./../talos/controlplane.yaml
+
+      # Wait for control plane to be ready
+      echo "Waiting for control plane to initialize..."
+      sleep 120
+
+      # Bootstrap etcd
+      echo "Bootstrapping etcd..."
+      talosctl bootstrap --nodes ${hcloud_server.control_plane.ipv4_address}
+
+      # Apply worker configs
+      %{ for idx, worker in hcloud_server.workers ~}
+      echo "Configuring worker ${idx + 1}..."
+      talosctl apply-config --insecure \
+        --nodes ${worker.ipv4_address} \
+        --file ./../talos/worker.yaml
+      %{ endfor ~}
+
+      # Wait for cluster to stabilize
+      echo "Waiting for cluster to stabilize..."
+      sleep 60
+
+      # Get kubeconfig
+      echo "Retrieving kubeconfig..."
+      talosctl kubeconfig ./../kubeconfig --nodes ${hcloud_server.control_plane.ipv4_address}
+
+      echo "Bootstrap complete!"
+    EOT
+  }
+
+  depends_on = [
+    null_resource.talos_config,
+    hcloud_server.control_plane,
+    hcloud_server.workers
+  ]
+}
