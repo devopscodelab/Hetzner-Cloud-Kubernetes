@@ -2,12 +2,6 @@ provider "hcloud" {
   token = var.hcloud_token
 }
 
-# SSH Key for emergency access (though Talos doesn't use SSH)
-resource "hcloud_ssh_key" "default" {
-  name       = "${var.cluster_name}-key"
-  public_key = var.ssh_public_key
-}
-
 # Private Network for internal communication
 resource "hcloud_network" "private_network" {
   name     = "${var.cluster_name}-network"
@@ -128,7 +122,6 @@ resource "hcloud_server" "workers" {
   server_type = var.server_type
   image       = "ubuntu-22.04"  # Will be replaced by Talos
   location    = var.location
-  ssh_keys    = [hcloud_ssh_key.default.id]
   firewall_ids = [hcloud_firewall.cluster_firewall.id]
 
   user_data = templatefile("${path.module}/../talos/worker-userdata.yaml", {
