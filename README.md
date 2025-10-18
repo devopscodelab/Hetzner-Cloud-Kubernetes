@@ -78,6 +78,7 @@ Before starting, ensure you have the following tools installed on your local mac
 export HCLOUD_TOKEN="your-hetzner-api-token"
 export CLUSTER_NAME="talos-k8s"
 export EMAIL="your-email@example.com"  # For Let's Encrypt certificates
+export TF_VAR_hcloud_token="LTV8RwD6BUAMLOuZGPuUxGxnNQPRSuhQXcoCAn6us9EA1qCQpG9F3US0wlYCo25G"
 ```
 
 ### Step 2: One-Command Deployment

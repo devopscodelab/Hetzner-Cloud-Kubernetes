@@ -1,0 +1,408 @@
+Terraform will perform the following actions:
+
+  # hcloud_firewall.cluster_firewall will be created
+  + resource "hcloud_firewall" "cluster_firewall" {
+      + id     = (known after apply)
+      + labels = (known after apply)
+      + name   = "talos-k8s-firewall"
+
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + protocol        = "icmp"
+          + source_ips      = [
+              + "10.0.0.0/16",
+            ]
+            # (2 unchanged attributes hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "443"
+          + protocol        = "tcp"
+          + source_ips      = [
+              + "0.0.0.0/0",
+              + "::/0",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "50000"
+          + protocol        = "tcp"
+          + source_ips      = [
+              + "0.0.0.0/0",
+              + "::/0",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "6443"
+          + protocol        = "tcp"
+          + source_ips      = [
+              + "0.0.0.0/0",
+              + "::/0",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "80"
+          + protocol        = "tcp"
+          + source_ips      = [
+              + "0.0.0.0/0",
+              + "::/0",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "any"
+          + protocol        = "tcp"
+          + source_ips      = [
+              + "10.0.0.0/16",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+      + rule {
+          + destination_ips = []
+          + direction       = "in"
+          + port            = "any"
+          + protocol        = "udp"
+          + source_ips      = [
+              + "10.0.0.0/16",
+            ]
+            # (1 unchanged attribute hidden)
+        }
+    }
+
+  # hcloud_load_balancer.k8s_api will be created
+  + resource "hcloud_load_balancer" "k8s_api" {
+      + delete_protection  = false
+      + id                 = (known after apply)
+      + ipv4               = (known after apply)
+      + ipv6               = (known after apply)
+      + labels             = {
+          + "cluster" = "talos-k8s"
+          + "type"    = "api"
+        }
+      + load_balancer_type = "lb11"
+      + location           = "fsn1"
+      + name               = "talos-k8s-api-lb"
+      + network_id         = (known after apply)
+      + network_ip         = (known after apply)
+      + network_zone       = (known after apply)
+
+      + algorithm (known after apply)
+
+      + target (known after apply)
+    }
+
+  # hcloud_load_balancer_network.k8s_api will be created
+  + resource "hcloud_load_balancer_network" "k8s_api" {
+      + enable_public_interface = true
+      + id                      = (known after apply)
+      + ip                      = "10.0.1.254"
+      + load_balancer_id        = (known after apply)
+      + network_id              = (known after apply)
+    }
+
+  # hcloud_load_balancer_service.k8s_api_service will be created
+  + resource "hcloud_load_balancer_service" "k8s_api_service" {
+      + destination_port = 6443
+      + id               = (known after apply)
+      + listen_port      = 6443
+      + load_balancer_id = (known after apply)
+      + protocol         = "tcp"
+      + proxyprotocol    = (known after apply)
+
+      + health_check (known after apply)
+
+      + http (known after apply)
+    }
+
+  # hcloud_load_balancer_target.k8s_api_target will be created
+  + resource "hcloud_load_balancer_target" "k8s_api_target" {
+      + id               = (known after apply)
+      + load_balancer_id = (known after apply)
+      + server_id        = (known after apply)
+      + type             = "server"
+      + use_private_ip   = (known after apply)
+    }
+
+  # hcloud_network.private_network will be created
+  + resource "hcloud_network" "private_network" {
+      + delete_protection        = false
+      + expose_routes_to_vswitch = false
+      + id                       = (known after apply)
+      + ip_range                 = "10.0.0.0/16"
+      + name                     = "talos-k8s-network"
+    }
+
+  # hcloud_network_subnet.private_subnet will be created
+  + resource "hcloud_network_subnet" "private_subnet" {
+      + gateway      = (known after apply)
+      + id           = (known after apply)
+      + ip_range     = "10.0.1.0/24"
+      + network_id   = (known after apply)
+      + network_zone = "eu-central"
+      + type         = "cloud"
+    }
+
+  # hcloud_server.control_plane will be created
+  + resource "hcloud_server" "control_plane" {
+      + allow_deprecated_images    = false
+      + backup_window              = (known after apply)
+      + backups                    = false
+      + datacenter                 = (known after apply)
+      + delete_protection          = false
+      + firewall_ids               = (known after apply)
+      + id                         = (known after apply)
+      + ignore_remote_firewall_ids = false
+      + image                      = "ubuntu-22.04"
+      + ipv4_address               = (known after apply)
+      + ipv6_address               = (known after apply)
+      + ipv6_network               = (known after apply)
+      + keep_disk                  = false
+      + labels                     = {
+          + "cluster" = "talos-k8s"
+          + "role"    = "control-plane"
+        }
+      + location                   = "fsn1"
+      + name                       = "talos-k8s-control-1"
+      + primary_disk_size          = (known after apply)
+      + rebuild_protection         = false
+      + server_type                = "cx22"
+      + shutdown_before_deletion   = false
+      + ssh_keys                   = (known after apply)
+      + status                     = (known after apply)
+      + user_data                  = "hb6L42vSF8blDyo9XKW3cimM4uk="
+
+      + network {
+          + alias_ips   = (known after apply)
+          + ip          = "10.0.1.10"
+          + mac_address = (known after apply)
+          + network_id  = (known after apply)
+        }
+
+      + public_net {
+          + ipv4         = (known after apply)
+          + ipv4_enabled = true
+          + ipv6         = (known after apply)
+          + ipv6_enabled = false
+        }
+    }
+
+  # hcloud_server.workers[0] will be created
+  + resource "hcloud_server" "workers" {
+      + allow_deprecated_images    = false
+      + backup_window              = (known after apply)
+      + backups                    = false
+      + datacenter                 = (known after apply)
+      + delete_protection          = false
+      + firewall_ids               = (known after apply)
+      + id                         = (known after apply)
+      + ignore_remote_firewall_ids = false
+      + image                      = "ubuntu-22.04"
+      + ipv4_address               = (known after apply)
+      + ipv6_address               = (known after apply)
+      + ipv6_network               = (known after apply)
+      + keep_disk                  = false
+      + labels                     = {
+          + "cluster" = "talos-k8s"
+          + "role"    = "worker"
+        }
+      + location                   = "fsn1"
+      + name                       = "talos-k8s-worker-1"
+      + primary_disk_size          = (known after apply)
+      + rebuild_protection         = false
+      + server_type                = "cx22"
+      + shutdown_before_deletion   = false
+      + ssh_keys                   = (known after apply)
+      + status                     = (known after apply)
+      + user_data                  = (known after apply)
+
+      + network {
+          + alias_ips   = (known after apply)
+          + ip          = "10.0.1.20"
+          + mac_address = (known after apply)
+          + network_id  = (known after apply)
+        }
+
+      + public_net {
+          + ipv4         = (known after apply)
+          + ipv4_enabled = true
+          + ipv6         = (known after apply)
+          + ipv6_enabled = false
+        }
+    }
+
+  # hcloud_server.workers[1] will be created
+  + resource "hcloud_server" "workers" {
+      + allow_deprecated_images    = false
+      + backup_window              = (known after apply)
+      + backups                    = false
+      + datacenter                 = (known after apply)
+      + delete_protection          = false
+      + firewall_ids               = (known after apply)
+      + id                         = (known after apply)
+      + ignore_remote_firewall_ids = false
+      + image                      = "ubuntu-22.04"
+      + ipv4_address               = (known after apply)
+      + ipv6_address               = (known after apply)
+      + ipv6_network               = (known after apply)
+      + keep_disk                  = false
+      + labels                     = {
+          + "cluster" = "talos-k8s"
+          + "role"    = "worker"
+        }
+      + location                   = "fsn1"
+      + name                       = "talos-k8s-worker-2"
+      + primary_disk_size          = (known after apply)
+      + rebuild_protection         = false
+      + server_type                = "cx22"
+      + shutdown_before_deletion   = false
+      + ssh_keys                   = (known after apply)
+      + status                     = (known after apply)
+      + user_data                  = (known after apply)
+
+      + network {
+          + alias_ips   = (known after apply)
+          + ip          = "10.0.1.21"
+          + mac_address = (known after apply)
+          + network_id  = (known after apply)
+        }
+
+      + public_net {
+          + ipv4         = (known after apply)
+          + ipv4_enabled = true
+          + ipv6         = (known after apply)
+          + ipv6_enabled = false
+        }
+    }
+
+  # hcloud_ssh_key.default will be created
+  + resource "hcloud_ssh_key" "default" {
+      + fingerprint = (known after apply)
+      + id          = (known after apply)
+      + labels      = {}
+      + name        = "talos-k8s-key"
+      + public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC... your-key-here"
+    }
+
+  # null_resource.install_cert_manager will be created
+  + resource "null_resource" "install_cert_manager" {
+      + id       = (known after apply)
+      + triggers = {
+          + "cluster_id" = (known after apply)
+        }
+    }
+
+  # null_resource.install_crossplane will be created
+  + resource "null_resource" "install_crossplane" {
+      + id       = (known after apply)
+      + triggers = {
+          + "cluster_id" = (known after apply)
+        }
+    }
+
+  # null_resource.install_traefik will be created
+  + resource "null_resource" "install_traefik" {
+      + id       = (known after apply)
+      + triggers = {
+          + "cluster_id" = (known after apply)
+        }
+    }
+
+  # null_resource.talos_bootstrap will be created
+  + resource "null_resource" "talos_bootstrap" {
+      + id       = (known after apply)
+      + triggers = {
+          + "control_plane_ip" = (known after apply)
+        }
+    }
+
+  # null_resource.talos_config will be created
+  + resource "null_resource" "talos_config" {
+      + id       = (known after apply)
+      + triggers = {
+          + "control_plane_ip" = (known after apply)
+        }
+    }
+
+Plan: 16 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + cluster_endpoint = (known after apply)
+  + control_plane_ip = (known after apply)
+  + kubeconfig_path  = "./../kubeconfig"
+  + load_balancer_ip = (known after apply)
+  + next_steps       = <<-EOT
+        ✅ Cluster deployed successfully!
+            
+        Next steps:
+            
+        1. Set your kubeconfig:
+           export KUBECONFIG=./../kubeconfig
+            
+        2. Verify cluster:
+           kubectl get nodes
+            
+        3. Check installed components:
+           kubectl get pods -A
+            
+        4. Configure DNS for your domain to point to Traefik LoadBalancer IP
+            
+        5. Deploy a sample service:
+           kubectl apply -f manifests/crossplane/example-service.yaml
+    EOT
+  + talosconfig_path = "./../talos/talosconfig"
+  + worker_ips       = [
+      + (known after apply),
+      + (known after apply),
+    ]
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+hcloud_ssh_key.default: Creating...
+hcloud_network.private_network: Creating...
+hcloud_load_balancer.k8s_api: Creating...
+hcloud_firewall.cluster_firewall: Creating...
+hcloud_firewall.cluster_firewall: Creation complete after 1s [id=10098157]
+hcloud_network.private_network: Creation complete after 1s [id=11541670]
+hcloud_network_subnet.private_subnet: Creating...
+hcloud_network_subnet.private_subnet: Creation complete after 0s [id=11541670-10.0.1.0/24]
+hcloud_load_balancer.k8s_api: Creation complete after 2s [id=4790423]
+hcloud_load_balancer_service.k8s_api_service: Creating...
+hcloud_load_balancer_network.k8s_api: Creating...
+hcloud_load_balancer_service.k8s_api_service: Creation complete after 0s [id=4790423__6443]
+hcloud_load_balancer_network.k8s_api: Still creating... [00m10s elapsed]
+hcloud_load_balancer_network.k8s_api: Creation complete after 17s [id=4790423-11541670]
+╷
+│ Error: Invalid field in API request
+│ 
+│   with hcloud_ssh_key.default,
+│   on main.tf line 7, in resource "hcloud_ssh_key" "default":
+│    7: resource "hcloud_ssh_key" "default" {
+│ 
+│ An invalid field was encountered during an API request. The field might not map 1:1 to your terraform resource.
+│ 
+│ invalid input in fields 'public_key' (invalid_input, b7c75da2f8c715bbdda1c5186bfe0556)
+│ 
+│ Field: public_key
+│ Messages:
+│  - SSH key type is invalid (supported types: ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, ecdsa-sha2-nistp521, ssh-dss, sk-ssh-ed25519@openssh.com, sk-ssh-ed25519, sk-ecdsa-sha2-nistp256, sk-ecdsa-sha2-nistp384, sk-ecdsa-sha2-nistp521
+│ Error code: invalid_input
+│ Status code: 422
+│ 
+╵
+[ec2-user@ip-10-0-3-211 terraform]$ 
