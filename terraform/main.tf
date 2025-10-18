@@ -96,6 +96,7 @@ resource "null_resource" "talos_config" {
       mkdir -p ./../talos
       talosctl gen config ${var.cluster_name} https://${hcloud_server.control_plane.ipv4_address}:6443 \
         --output-dir ./../talos \
+        --force \
         --kubernetes-version=${var.kubernetes_version}
     EOT
   }
