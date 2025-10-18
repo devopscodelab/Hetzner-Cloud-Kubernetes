@@ -1,0 +1,17 @@
+ull_resource.talos_config: Destroying... [id=5847378208930609855]
+null_resource.talos_config: Destruction complete after 0s
+null_resource.talos_config: Creating...
+null_resource.talos_config: Provisioning with 'local-exec'...
+null_resource.talos_config (local-exec): Executing: ["/bin/sh" "-c" "mkdir -p ./../talos\ntalosctl gen config talos-k8s https://49.13.16.76:6443 \\\n  --output-dir ./../talos \\\n  --kubernetes-version=v1.28.0\n"]
+null_resource.talos_config (local-exec): generating PKI and tokens
+null_resource.talos_config (local-exec): Created ../talos/controlplane.yaml
+null_resource.talos_config (local-exec): Created ../talos/worker.yaml
+null_resource.talos_config (local-exec): Created ../talos/talosconfig
+null_resource.talos_config: Creation complete after 5s [id=3276208764267733656]
+null_resource.talos_bootstrap: Creating...
+null_resource.talos_bootstrap: Provisioning with 'local-exec'...
+null_resource.talos_bootstrap (local-exec): Executing: ["/bin/sh" "-c" "# Configure talosctl\ntalosctl config endpoint 49.13.16.76\ntalosctl config node 49.13.16.76\n\n# Apply control plane config\ntalosctl apply-config --insecure \\\n  --nodes 49.13.16.76 \\\n  --file ./../talos/controlplane.yaml\n\n# Wait for control plane to be ready\nsleep 120\n\n# Bootstrap etcd\ntalosctl bootstrap --nodes 49.13.16.76\n\n# Apply worker configs\n      talosctl apply-config --insecure \\\n  --nodes 159.69.127.12 \\\n  --file ./../talos/worker.yaml\n      talosctl apply-config --insecure \\\n  --nodes 167.235.238.81 \\\n  --file ./../talos/worker.yaml\n\n# Get kubeconfig\ntalosctl kubeconfig ./../kubeconfig --nodes 49.13.16.76\n"]
+null_resource.talos_bootstrap (local-exec): no context is set
+null_resource.talos_bootstrap (local-exec): no context is set
+null_resource.talos_bootstrap (local-exec): error applying new configuration: rpc error: code = Unavailable desc = connection error: desc = "transport: Error while dialing: dial tcp 49.13.16.76:50000: connect: connection refused"
+null_resource.talos_bootstrap: Still creating... [00m10s elapsed]
